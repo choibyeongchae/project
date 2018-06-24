@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.ync.project.mapper.playerScoreMapper">
+
+	<select id="selectScore" resultType="BatterPlayerVO" parameterType="Integer">
+	 
+		select *
+		from PLAYERINFORMATION p,BATTERRECORD b
+		where p.BACKNUM = b.BACKNUM
+		and p.BACKNUM = #{backnum}
+		order by seasonyear desc
+	</select>
+	
+	
+	<select id="ListPicherScore" resultType="PitcherPlayerVO" parameterType="Integer">
+		select *
+		from PITCHERRECORD pi,PLAYERINFORMATION py
+		where pi.BACKNUM = py.BACKNUM
+		and pi.BACKNUM = #{backnum}
+		order by seasonyear desc
+	</select>
+	
+	<select id="listPlayer" resultType="PlayerVO">
+		select *
+		from PLAYERINFORMATION
+		where gubun like '%'|| 1 ||'%'
+	</select>
+	
+	<select id="secondListPlayer" resultType="PlayerVO">
+		select *
+		from PLAYERINFORMATION
+		where gubun like '%'|| 2 ||'%'
+	</select>
+	
+	<select id ="readPlayer" resultType="PlayerVO">
+		select *
+		from PLAYERINFORMATION
+		where backnum = #{backnum}
+	</select>
+	
+	<delete id="removePlayerBatterRecord">
+		delete from BATTERRECORD
+		where backnum = #{backnum}
+		
+	</delete>
+	<delete id="removePlayerPitcherRecord">
+		delete from PITCHERRECORD
+		where backnum = #{backnum}
+		
+	</delete>
+	
+	<delete id="removePlayer">
+		delete from PLAYERINFORMATION
+		where backnum = #{backnum}
+	</delete>
+	
+	<insert id="player_join">
+		insert into PLAYERINFORMATION (backnum,enteryear,id,name,birth,pitcherhitting,career,position,gubun,img,height,weight)
+		values (#{backnum},#{enteryear},#{id},#{name},#{birth},#{pitcherhitting},#{career},#{position},#{gubun},#{img},#{height},#{weight})
+	</insert>
+	
+	<insert id="player_RecordJoin">
+		insert into BATTERRECORD (gamecnt,hit,battingavg,twohit,threehit,homerun,hittingscore,fourball,strikeout,addscore,seasonyear,team,id,backnum)
+		values (#{gamecnt},#{hit},#{battingavg},#{twohit},#{threehit},#{homerun},#{hittingscore},#{fourball},#{strikeout},#{addscore},#{seasonyear},#{team},#{id},#{backnum})
+	</insert>
+	
+	<insert id="player_PicherRecord">
+		insert into PITCHERRECORD (gamecnt,saveavg,win,lose,save,hold,inning,strikeout,hitbypitch,myhit,myhomerun,mylosescore,losescore,seasonyear,team,id,backnum)
+		values (#{gamecnt},#{saveavg},#{win},#{lose},#{save},#{hold},#{inning},#{strikeout},#{hitbypitch},#{myhit},#{myhomerun},#{mylosescore},#{losescore},#{seasonyear},#{team},#{id},#{backnum})
+	</insert>
+	
+	<update id="update_intro">
+		UPDATE playerinformation SET name = #{name},
+									position = #{position},
+									gubun = #{gubun}
+		WHERE backnum = #{backnum} 
+	</update>
+	
+	<update id="update_BatterRecord">
+		update batterrecord
+		set gamecnt = #{gamecnt},
+		 hit = #{hit},
+		 battingavg = #{battingavg},
+		 twohit = #{twohit},
+		 threehit = #{threehit},
+		 homerun = #{homerun},
+		 hittingscore = #{hittingscore},
+		 fourball = #{fourball},
+		 strikeout = #{strikeout},
+		 addscore = #{addscore}
+		 where backnum = #{backnum}
+		 and seasonyear = #{seasonyear}
+	</update>
+	<update id="update_PitcherRecord">
+		update pitcherrecord
+		set gamecnt = #{gamecnt},
+		 saveavg = #{saveavg},
+		 win = #{win},
+		 lose = #{lose},
+		 save = #{save},
+		 hold = #{hold},
+		 inning = #{inning},
+		 strikeout = #{strikeout},
+		 hitbypitch = #{hitbypitch},
+		 myhit = #{myhit},
+		 myhomerun = #{myhomerun},
+		 mylosescore = #{mylosescore}
+		 where backnum = #{backnum}
+		 and seasonyear = #{seasonyear}
+	</update>
+	
+	<select id="listSearchCount_second"  resultType="int">
+	<![CDATA[
+		SELECT	count(backnum)
+		FROM	playerinformation
+	]]>
+	
+	<where>
+		<include refid="search"></include>
+		<![CDATA[
+			AND gubun like '%'|| 2 ||'%'
+		]]>
+	</where>
+	</select>
+	
+	<select id="listSearchCount"  resultType="int">
+	<![CDATA[
+		SELECT	count(backnum)
+		FROM	playerinformation
+	]]>
+	
+	<where>
+		<include refid="search"></include>
+		<![CDATA[
+			AND gubun like '%'|| 1 ||'%'
+		]]>
+	</where>
+	</select>
+	<sql id="search">
+	<if test="searchType != null" >
+		<if test="searchType == 't'.toString()">
+			AND backnum LIKE '%'|| #{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			AND name LIKE '%'|| #{keyword}||'%'
+		</if>
+		     
+		<if test="searchType == 'tcw'.toString()">
+			AND (backnum LIKE '%'|| #{keyword}||'%'
+				OR
+				name LIKE '%'|| #{keyword}||'%'
+		        )
+		</if>            
+	</if>
+</sql>
+	
+	<select id="listPage"  resultType="PlayerVO">
+	<![CDATA[
+	SELECT	backnum,
+			name,
+			birth
+	FROM   (SELECT 
+					rownum rn,
+					backnum,
+					name,
+					birth
+	  		FROM	playerinformation
+			WHERE	rownum <= #{page} * #{perPageNum}
+			AND		gubun like '%'|| 1 ||'%'
+			)
+	WHERE 	rn > (#{page} -1) * #{perPageNum}
+	/* AND		rownum <= #{perPageNum} 경우에 따라서 실행계획이 더 나아진다.*/
+	]]>
+</select>
+
+<select id="listPage_second"  resultType="PlayerVO">
+	<![CDATA[
+	SELECT	backnum,
+			name,
+			birth
+	FROM   (SELECT 
+					rownum rn,
+					backnum,
+					name,
+					birth
+	  		FROM	playerinformation
+			WHERE	rownum <= #{page} * #{perPageNum}
+			AND		gubun like '%'|| 2 ||'%'
+			)
+	WHERE 	rn > (#{page} -1) * #{perPageNum}
+	/* AND		rownum <= #{perPageNum} 경우에 따라서 실행계획이 더 나아진다.*/
+	]]>
+</select>
+
+<select id="listSearch"  resultType="PlayerVO">
+	<![CDATA[
+		SELECT	backnum,
+			name,
+			birth
+		FROM   (SELECT 	rownum rn,
+						backnum,
+			name,
+			birth
+		  		FROM	(SELECT backnum,
+			name,
+			birth
+      					FROM playerinformation 
+      					where gubun like '%'|| 1 ||'%'
+      					ORDER BY name desc)
+	]]>
+		<where>
+				<include refid="search"></include>
+				<![CDATA[
+				AND rownum <= #{page} * #{perPageNum}
+		  		)
+				]]>
+		</where>
+	<![CDATA[
+		WHERE rn > (#{page} -1) * #{perPageNum}
+		
+	]]>
+</select>
+
+<select id="listSearch_second"  resultType="PlayerVO">
+	<![CDATA[
+		SELECT	backnum,
+			name,
+			birth
+		FROM   (SELECT 	rownum rn,
+						backnum,
+			name,
+			birth
+		  		FROM	(SELECT backnum,
+			name,
+			birth
+      					FROM playerinformation 
+      					where gubun like '%'|| 2 ||'%'
+      					ORDER BY name desc)
+	]]>
+		<where>
+				<include refid="search"></include>
+				<![CDATA[
+				AND rownum <= #{page} * #{perPageNum}
+		  		)
+				]]>
+		</where>
+	<![CDATA[
+		WHERE rn > (#{page} -1) * #{perPageNum}
+		
+	]]>
+</select>
+
+
+<select id="listCriteria" resultType="PlayerVO">
+<![CDATA[
+	SELECT	backnum,
+			name,
+			birth
+	FROM   (SELECT 	/*+INDEX_DESC(board writenum)*/
+					rownum rn,
+					backnum,
+			name,
+			birth
+	  		FROM	playerinformation
+			WHERE	rownum <= #{page} * #{perPageNum}
+			AND		gubun like '%'|| 1 ||'%'
+			)
+	WHERE 	rn > (#{page} -1) * #{perPageNum}
+	/* AND		rownum <= #{perPageNum} */
+	]]>
+</select>
+
+<select id="listCriteria_second" resultType="PlayerVO">
+<![CDATA[
+	SELECT	backnum,
+			name,
+			birth
+	FROM   (SELECT 	/*+INDEX_DESC(board writenum)*/
+					rownum rn,
+					backnum,
+			name,
+			birth
+	  		FROM	playerinformation
+			WHERE	rownum <= #{page} * #{perPageNum}
+			AND		gubun like '%'|| 2 ||'%'
+			)
+	WHERE 	rn > (#{page} -1) * #{perPageNum}
+	/* AND		rownum <= #{perPageNum} */
+	]]>
+</select>
+
+
+
+ <select id="countPaging" resultType="int">
+	<![CDATA[
+	SELECT	count(backnum) 
+	FROM	playerinformation 
+	WHERE	gubun like '%'|| 1 ||'%'
+	]]>
+ </select>
+ 
+ <select id="countPaging_second" resultType="int">
+	<![CDATA[
+	SELECT	count(backnum) 
+	FROM	playerinformation 
+	WHERE	gubun like '%'|| 2 ||'%'
+	]]>
+ </select>
+ 
+
+</mapper>
+
+

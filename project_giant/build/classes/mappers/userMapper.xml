@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.ync.project.mapper.UserMapper">
+
+	<select id="login" resultType="UserVO">
+		
+		select ID,PASSWORD,memberlevel
+		from MEMBERJOIN
+		where ID = #{id}
+		and password = #{password}
+	</select>
+  	
+  	<select id="join_check" resultType="int">
+  		select count(ID)
+  		from MEMBERJOIN
+  		where ID = #{id}
+  	</select>
+  	
+  	<select id="read" resultType="UserVO">
+  		select *
+		from MEMBERJOIN
+		where ID = #{id}
+  	</select>
+  	
+  	<insert id="user_join">
+  		insert into MEMBERJOIN (id,PASSWORD,EMAIL,JOINDAY)
+  	    values (#{id},#{password},#{email},SYSDATE)
+  	</insert>
+  	
+  	
+	<update id="keepLogin" >
+		UPDATE MEMBERJOIN SET 	
+		sessionKey = #{sessionId},
+	  	sessionLimit = #{next}
+		WHERE id = #{id}
+	</update>
+
+	<delete id="deleteMember">
+		 DELETE FROM MEMBERJOIN WHERE id = #{id}
+	</delete>
+
+	<select id="checkUserWithSessionKey" resultType="UserVO">
+		SELECT 	*
+		FROM	MEMBERJOIN
+		WHERE	sessionKey = #{value}
+		AND		sessionlimit > SYSDATE
+	</select>	
+	
+	<select id="memListAll" resultType="UserVO">
+		select *
+		from MEMBERJOIN
+		where memberlevel = 1
+	</select>
+	
+
+</mapper>
+
+

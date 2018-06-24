@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.ync.project.mapper.teamRankMapper">
+
+	<select id="selectRank" resultType="TeamRankVO" parameterType="String">
+	 
+		SELECT *
+		FROM TEAMRANK
+		WHERE SEASONYEAR like '%'|| #{year} ||'%'
+		ORDER BY seasonrank asc
+	
+	</select>
+	
+	<select id = "selectRecord" resultType="TeamRecordVO">
+		select * 
+		from TEAMRECORD
+		WHERE SEASONYEAR like '%'|| #{year} ||'%'
+		ORDER BY BATTINGAVG desc
+	</select>
+	
+	<delete id="delete_rank" parameterType="string">
+		delete from teamrank
+		where seasonyear = #{seasonyear}
+	</delete>
+	
+	<insert id="insert_rank">
+		insert into teamrank(seasonrank,gamecount,win,draw,lose,winavg,gameminus,seasonyear,teamcode)
+	    values (#{seasonrank},#{gamecount},#{win},#{draw},#{lose},#{winavg},#{gameminus},#{seasonyear},#{teamcode})
+	</insert>
+	
+	<select id="team_List" resultType="TeamVO">
+		select *
+		from team
+	</select>
+	
+	<select id="read_team" parameterType="string" resultType="TeamVO">
+		select *
+		from team
+		where teamcode = #{teamcode}
+	</select>
+	
+	<insert id="regist_team">
+		insert into team(teamname,place,id,championcnt,foundyear,teamcode)
+		values (#{teamname},#{place},#{id},#{championcnt},#{foundyear},#{teamcode})
+	</insert>
+	
+	<delete id="remove_team">
+		delete from team
+		where teamcode = #{teamcode}
+	</delete>
+	
+	<update id="modi_team">
+		update team set 
+		teamname = #{teamname},
+		place = #{place},
+		championcnt = #{championcnt}
+		where teamcode = #{teamcode}
+	</update>
+	
+	<select id="read_rank" resultType="TeamRankVO" parameterType="string">
+		select *
+		from teamrank
+		where seasonyear = #{seasonyear}
+	</select>
+	
+	<update id="update_rank">
+		update teamrank set seasonrank = #{seasonrank},
+							gamecount = #{gamecount},
+							win = #{win},
+							draw = #{draw},
+							lose = #{lose},
+							winavg = #{winavg},
+							gameminus = #{gameminus}
+		where seasonyear = #{seasonyear}
+		
+	</update>
+	
+	<select id="read_record" resultType="TeamRecordVO" parameterType="string">
+		select *
+		from teamrecord
+		where seasonyear = #{seasonyear}
+	</select>
+	
+	<insert id="insert_record">
+		insert into teamrecord (battingavg,gamecount,hit,
+		twohit,threehit,homerun,
+		run,point,losescore,mylosescore
+		,miss,longhitavg,onbaseavg,saveavg,hitbypitch,
+		seasonyear,teamcode)
+		values (#{battingavg},#{gamecount},#{hit},
+		#{twohit},#{threehit},#{homerun},#{run},
+		#{point},#{losescore},#{mylosescore},
+		#{miss},#{longhitavg},#{onbaseavg},#{saveavg},#{hitbypitch},
+		#{seasonyear},#{teamcode})
+		
+	</insert>
+	
+	<delete id="delete_record">
+		delete from teamrecord
+		where seasonyear = #{seasonyear}
+	</delete>
+	
+	<update id="update_record">
+		update teamrecord set battingavg = #{battingavg},
+		gamecount = #{gamecount}, hit = #{hit},
+		twohit = #{twohit}, threehit = #{threehit},
+		homerun = #{homerun}, run = #{run},
+		point = #{point}, losescore = #{losescore},
+		mylosescore = #{mylosescore}, miss = #{miss},
+		longhitavg = #{longhitavg}, onbaseavg = #{onbaseavg},
+		saveavg = #{saveavg}, hitbypitch = #{hitbypitch}
+		where seasonyear = #{seasonyear}
+	</update>
+
+	
+	
+	
+
+</mapper>
+
+

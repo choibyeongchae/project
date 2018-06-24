@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.ync.project.mapper.NoticeMapper">
+
+
+<update id="updatenoticeCnt" parameterType="Integer">
+	UPDATE notice set view_cnt = view_cnt +1
+	WHERE	writenum = #{writenum}
+</update>
+
+
+<!-- 자유 게시판 -->
+<insert id="create">
+    INSERT INTO notice (writenum, writetitle, writecontent, writepeople,id) 
+    VALUES(NOTICE_BOARD.NEXTVAL, #{writetitle},#{writecontent}, #{writepeople},#{writepeople})
+</insert>
+
+<select id="read" resultType="BoardVO">
+	SELECT  writenum,
+	 		writetitle,
+	 		writecontent,
+	 		writepeople,
+	 		writeday,
+	 		view_cnt
+	FROM 	notice 
+	WHERE	writenum = #{writenum}
+</select>
+
+<update id="update">
+	UPDATE notice	SET writetitle =#{writetitle},
+						writecontent =#{writecontent},
+						writepeople =#{writepeople}
+	WHERE writenum = #{writenum}
+</update>
+
+
+
+<update id="updateViewCnt">
+	UPDATE	notice SET view_cnt = view_cnt +1
+	WHERE	writenum = #{writenum}
+</update>
+
+ <delete id="delete">
+ DELETE FROM notice WHERE writenum = #{writenum}
+ </delete>
+
+ <select id="listAll" resultType="BoardVO">
+ <![CDATA[
+	SELECT 	writenum,
+			writetitle,
+			writecontent,
+			writepeople,
+			writeday,
+			view_cnt
+	FROM notice 
+	WHERE writenum > 0 
+	ORDER BY writenum DESC, writeday DESC
+ ]]>  
+ </select>
+ 
+
+<select id="listPage"  resultType="BoardVO">
+	<![CDATA[
+	SELECT	writenum,
+			writetitle,
+			writecontent,
+			writepeople,
+			writeday,
+			view_cnt
+	FROM   (SELECT 	/*+INDEX_DESC(notice writenum)*/
+					rownum rn,
+					writenum,
+					writetitle,
+					writecontent,
+					writepeople,
+					writeday,
+					view_cnt
+	  		FROM	notice
+			WHERE	rownum <= #{page} * #{perPageNum}
+			AND		writenum > 0
+			)
+	WHERE 	rn > (#{page} -1) * #{perPageNum}
+	/* AND		rownum <= #{perPageNum} 경우에 따라서 실행계획이 더 나아진다.*/
+	]]>
+</select>
+<select id="listSearch"  resultType="BoardVO">
+	<![CDATA[
+		SELECT	writenum,
+				writetitle,
+				writecontent,
+				writepeople,
+				writeday,
+				view_cnt
+		FROM   (SELECT 	rownum rn,
+						writenum,
+						writetitle,
+						writecontent,
+						writepeople,
+						writeday,
+						view_cnt
+		  		FROM	(SELECT writenum,
+								writetitle,
+								writecontent,
+								writepeople,
+								writeday,
+								view_cnt
+      					 FROM notice 
+      					 ORDER BY writenum desc)
+	]]>
+		<where>
+				<include refid="search"></include>
+				<![CDATA[
+				AND rownum <= #{page} * #{perPageNum}
+		  		)
+				]]>
+		</where>
+	<![CDATA[
+		WHERE rn > (#{page} -1) * #{perPageNum}
+		
+	]]>
+</select>
+<select id="listCriteria" resultType="BoardVO">
+<![CDATA[
+	SELECT	writenum,
+			writetitle,
+			writecontent,
+			writepeople,
+			writeday,
+			view_cnt
+	FROM   (SELECT 	/*+INDEX_DESC(notice writenum)*/
+					rownum rn,
+					writenum,
+					writetitle,
+					writecontent,
+					writepeople,
+					writeday,
+					view_cnt
+	  		FROM	notice
+			WHERE	rownum <= #{page} * #{perPageNum}
+			AND		writenum > 0
+			)
+	WHERE 	rn > (#{page} -1) * #{perPageNum}
+	/* AND		rownum <= #{perPageNum} */
+	]]>
+</select>
+
+
+
+ <select id="countPaging" resultType="int">
+	<![CDATA[
+	SELECT	count(writenum) 
+	FROM	notice 
+	WHERE	writenum > 0 
+	]]>
+ </select>
+ 
+ <!-- test 를 위한 임시 SQL -->
+<!-- 
+ <select id="listSearch" resultType="BoardVO">
+<![CDATA[
+	SELECT	writenum,
+			title,
+			content,
+			writer,
+			viewcnt,
+			regdate
+	FROM   (SELECT 	/*+INDEX_DESC(notice pk_notice)*/
+					rownum rn,
+					writenum,
+					title,
+					content,
+					writer,
+					viewcnt,
+					regdate
+	  		FROM	notice
+			WHERE	rownum <= #{page} * #{perPageNum}
+			AND		writenum > 0
+			AND		writer LIKE '%' || #{keyword} || '%'
+			)
+	WHERE 	rn > (#{page} -1) * #{perPageNum}
+	]]>
+</select>
+
+ <select id="listSearchCount" resultType="int">
+	<![CDATA[
+	SELECT	count(writenum) 
+	FROM	notice 
+	WHERE	writenum > 0
+	AND		writer LIKE '%' || #{keyword} || '%'
+	]]>
+ </select>
+ -->
+<!-- test 를 위한 임시 SQL -->
+
+<!-- 동적SQL (<sql>로 분리) -->
+<sql id="search">
+	<if test="searchType != null" >
+		<if test="searchType == 't'.toString()">
+			AND writetitle LIKE '%'|| #{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			AND writecontent LIKE '%'|| #{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			AND writepeople LIKE '%'|| #{keyword}||'%'
+		</if>    
+		<if test="searchType == 'tc'.toString()">
+			AND (writetitle LIKE '%'|| #{keyword}||'%' OR writecontent LIKE '%'|| #{keyword}||'%')
+		</if>      
+		<if test="searchType == 'cw'.toString()">
+			AND (writecontent LIKE '%'|| #{keyword}||'%' OR writepeople LIKE '%'|| #{keyword}||'%')
+		</if>      
+		<if test="searchType == 'tcw'.toString()">
+			AND (writetitle LIKE '%'|| #{keyword}||'%'
+				OR
+				writecontent LIKE '%'|| #{keyword}||'%'
+		        OR
+				writepeople LIKE '%'|| #{keyword}||'%')
+		</if>            
+	</if>
+</sql>
+
+
+
+<select id="listSearchCount"  resultType="int">
+	<![CDATA[
+		SELECT	count(writenum)
+		FROM	notice
+	]]>
+	
+	<where>
+		<include refid="search"></include>
+		<![CDATA[
+			AND writenum > 0
+		]]>
+	</where>
+</select>
+<!-- 동적SQL (<sql>로 분리) -->
+
+<insert id="addAttach">
+	INSERT INTO tbl_attach(fullname, writenum) VALUES (#{fullName}, SEQ_notice.CURRVAL)
+</insert> 
+
+
+<select id="getAttach" resultType="string">
+	SELECT	fullname
+	FROM	tbl_attach
+	WHERE 	writenum = #{writenum}
+	ORDER BY regdate
+</select> 
+
+ 
+<delete id="deleteAttach">
+	DELETE FROM notice WHERE writenum = #{writenum}
+</delete>
+
+<insert id="replaceAttach">
+	INSERT INTO tbl_attach(fullname, writenum) VALUES (#{fullName}, #{writenum})
+</insert>
+
+</mapper>
